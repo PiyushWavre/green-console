@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="light" />
+    <title>User Access Console</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+
+    <main id="loginView" class="login-shell">
+      <section class="login-card" aria-labelledby="loginTitle">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">H</div>
+          <div>
+            <p class="eyebrow">Restricted administration</p>
+            <h1 id="loginTitle">User Access Console</h1>
+          </div>
+        </div>
+
+        <p class="login-copy">
+          Sign in with the administrator ID created in Supabase. This console does not store administrator or user passwords.
+        </p>
+
+        <form id="loginForm" class="form-stack" novalidate>
+          <label class="field">
+            <span>Administrator ID</span>
+            <input id="adminLoginId" name="adminLoginId" type="text" autocomplete="username" inputmode="text" required />
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <span class="password-field">
+              <input id="adminPassword" name="adminPassword" type="password" autocomplete="current-password" required />
+              <button class="password-toggle" type="button" data-toggle-password="adminPassword" aria-label="Show password">Show</button>
+            </span>
+          </label>
+
+          <p id="loginError" class="form-error" role="alert" hidden></p>
+          <button id="loginButton" class="button button-primary button-full" type="submit">Sign in securely</button>
+        </form>
+
+        <p class="security-note">The administrator session closes after inactivity and when the browser tab is closed.</p>
+      </section>
+    </main>
+
+    <div id="dashboardView" class="dashboard" hidden>
+      <header class="topbar">
+        <div class="topbar-brand">
+          <div class="brand-mark brand-mark-small" aria-hidden="true">H</div>
+          <div>
+            <p class="eyebrow">Restricted administration</p>
+            <h1>User Access Console</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="adminIdentity" class="admin-identity"></span>
+          <button id="logoutButton" class="button button-secondary" type="button">Log out</button>
+        </div>
+      </header>
+
+      <main class="page-shell">
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">Supabase authentication</p>
+            <h2>Manage calculator users</h2>
+            <p>Create Login IDs, review the latest sign-in, reset passwords and enable or disable access.</p>
+          </div>
+          <button id="refreshButton" class="button button-secondary" type="button">Refresh users</button>
+        </section>
+
+        <section class="stats-grid" aria-label="User statistics">
+          <article class="stat-card"><span>Total users</span><strong id="totalUsersStat">0</strong></article>
+          <article class="stat-card"><span>Active</span><strong id="activeUsersStat">0</strong></article>
+          <article class="stat-card"><span>Disabled</span><strong id="disabledUsersStat">0</strong></article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel create-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">New account</p>
+                <h3>Create a user</h3>
+              </div>
+            </div>
+
+            <form id="createUserForm" class="form-stack" novalidate>
+              <label class="field">
+                <span>User ID</span>
+                <input id="newLoginId" name="newLoginId" type="text" autocomplete="off" spellcheck="false" maxlength="64" required />
+                <small>Letters, numbers, full stops, underscores and hyphens only.</small>
+              </label>
+
+              <label class="field">
+                <span>Password</span>
+                <span class="password-field">
+                  <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" required />
+                  <button class="password-toggle" type="button" data-toggle-password="newPassword" aria-label="Show password">Show</button>
+                </span>
+                <small id="passwordRuleText">Use at least 8 characters.</small>
+              </label>
+
+              <label class="checkbox-row">
+                <input id="newUserActive" type="checkbox" checked />
+                <span>Allow access immediately</span>
+              </label>
+
+              <p id="createError" class="form-error" role="alert" hidden></p>
+              <button id="createUserButton" class="button button-primary button-full" type="submit">Create user</button>
+            </form>
+
+            <div class="password-policy-note">
+              <strong>Passwords are not recoverable.</strong>
+              <span>The console can set a new password, but Supabase never returns an existing password.</span>
+            </div>
+          </article>
+
+          <article class="panel users-panel">
+            <div class="panel-heading users-heading">
+              <div>
+                <p class="eyebrow">Account directory</p>
+                <h3>Calculator users</h3>
+              </div>
+              <label class="search-field">
+                <span class="sr-only">Search users</span>
+                <input id="userSearch" type="search" placeholder="Search User ID" autocomplete="off" />
+              </label>
+            </div>
+
+            <div id="usersLoading" class="empty-state">Loading users…</div>
+            <div id="usersEmpty" class="empty-state" hidden>No users found.</div>
+
+            <div id="usersTableWrap" class="table-wrap" hidden>
+              <table class="users-table">
+                <thead>
+                  <tr>
+                    <th>User ID</th>
+                    <th>Status</th>
+                    <th>Last login</th>
+                    <th>Created</th>
+                    <th class="actions-column">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="passwordDialog" class="dialog">
+      <form id="resetPasswordForm" method="dialog" class="dialog-card">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">Direct password reset</p>
+            <h2>Set a new password</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog="passwordDialog" aria-label="Close">×</button>
+        </div>
+        <p>Set a replacement password for <strong id="resetUserLabel"></strong>. The existing password cannot be viewed.</p>
+        <input id="resetUserId" type="hidden" />
+        <label class="field">
+          <span>New password</span>
+          <span class="password-field">
+            <input id="resetPassword" type="password" autocomplete="new-password" required />
+            <button class="password-toggle" type="button" data-toggle-password="resetPassword" aria-label="Show password">Show</button>
+          </span>
+        </label>
+        <p id="resetError" class="form-error" role="alert" hidden></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" type="button" data-close-dialog="passwordDialog">Cancel</button>
+          <button id="resetPasswordButton" class="button button-primary" type="submit">Update password</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="credentialDialog" class="dialog">
+      <div class="dialog-card credential-card">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">One-time display</p>
+            <h2 id="credentialDialogTitle">Credentials ready</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog="credentialDialog" aria-label="Close">×</button>
+        </div>
+        <p>Copy these details now. The password will not be stored or shown again.</p>
+        <div class="credential-box">
+          <div><span>User ID</span><strong id="credentialLoginId"></strong></div>
+          <div><span>Password</span><strong id="credentialPassword"></strong></div>
+        </div>
+        <div class="dialog-actions">
+          <button id="copyCredentialsButton" class="button button-primary" type="button">Copy credentials</button>
+          <button class="button button-secondary" type="button" data-close-dialog="credentialDialog">Done</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="confirmDialog" class="dialog">
+      <div class="dialog-card dialog-card-small">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">Confirm action</p>
+            <h2 id="confirmTitle">Change access</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog="confirmDialog" aria-label="Close">×</button>
+        </div>
+        <p id="confirmMessage"></p>
+        <div class="dialog-actions">
+          <button class="button button-secondary" type="button" data-close-dialog="confirmDialog">Cancel</button>
+          <button id="confirmActionButton" class="button button-danger" type="button">Confirm</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="./config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
